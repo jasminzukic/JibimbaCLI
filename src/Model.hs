@@ -1,6 +1,6 @@
 module Model where
 
-import Control.Concurrent
+import Control.Concurrent (MVar)
 
 data Game = Game
   { syntagmas :: [String]

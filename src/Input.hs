@@ -1,14 +1,15 @@
-module Input where
+module Input (
+    inputSyns
+  , inputTeams
+  ) where
 
 import Display
 import Model
 
-import Control.Concurrent
-import Control.Monad
-import Data.Char
-import qualified Data.Text as T
-import System.Console.ANSI
-import System.Random.Shuffle
+import Data.Char (isLetter)
+-- import qualified Data.Text as T ()
+import System.Console.ANSI (clearScreen)
+import System.Random.Shuffle (shuffleM)
 
 
 inputTeams :: Game -> Int -> IO Game
@@ -17,7 +18,17 @@ inputTeams g n = do
   displayTeamInput n
   l <- getLine
   case l of
-    "" -> return g
+    "" -> do
+      let t = teams g
+      if null t
+        then do
+          clearScreen
+          putStrLn "You need to have at least one team. Press ENTER to continue."
+          getLine
+          inputTeams g n
+        else do
+          t' <- shuffleM t
+          return $ g { teams = t' }
     _  -> do
       let t = teams g
       let g' = g { teams = (l,0):t }
@@ -31,9 +42,15 @@ inputSyns g = do
   displaySyntagmaInput syns --
   syn <- getLine
   case syn of
-    "play" -> do
-      shuffledSyns <- shuffleM syns
-      return $ g { syntagmas = shuffledSyns }
+    "play" -> if null syns
+      then do
+        clearScreen
+        putStrLn "You need to have at least one syntagma. Press ENTER to continue."
+        getLine
+        inputSyns g
+      else do
+        shuffledSyns <- shuffleM syns
+        return $ g { syntagmas = shuffledSyns }
 
     -- "quit" -> do
     --   putStrLn "You decided to quit the game. Press ENTER to confirm."

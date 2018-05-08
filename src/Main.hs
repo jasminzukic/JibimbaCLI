@@ -1,17 +1,17 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Main where
+module Main (
+  main
+) where
 
 import Display
 import Input
 import Model
 
 import Control.Concurrent
-import Control.Monad
-import Data.Char
-import qualified Data.Text as T
-import System.Console.ANSI
-import System.Random.Shuffle
+-- import qualified Data.Text as T ()
+import System.Console.ANSI (clearScreen)
+import System.Random.Shuffle (shuffleM)
 
 
 
@@ -22,8 +22,8 @@ main = do
                 , teams = [], currentTeam = 0
                 , time = 5
                 , runda = 1 }
-  g <- inputTeams g 1
-  g <- inputSyns g
+  g' <- inputTeams g 1
+  g <- inputSyns g'
   mGame <- newMVar g
   playGame mGame
 
@@ -65,8 +65,6 @@ playGame mGame = do
   clearScreen
   g <- readMVar mGame
   let r = runda g
-  putStrLn $ "Round " ++ show r ++ " Start!\n"
-
   displayRoundDescription r
 
   playRound mGame
@@ -120,7 +118,7 @@ playRound mGame = do
 
 changeWord :: GameSettings -> IO ()
 changeWord mGame = do
-  getLine
+  getLine -- when a player presses ENTER change the word and update game
   g <- readMVar mGame
   if null (syntagmas g)
     then do
@@ -130,25 +128,22 @@ changeWord mGame = do
       g <- takeMVar mGame
       let newSyns = tail $ syntagmas g
       let newGuessed = (head (syntagmas g)) : guessed g
-      updatedTeams <- updateTeams g
+      let updatedTeams = updateTeams g
       let updatedGame = g { syntagmas = newSyns
                           , guessed = newGuessed
                           , teams = updatedTeams
                           }
       putMVar mGame updatedGame
-      display mGame
+      displaySyntagma mGame
       changeWord mGame
 
-updateTeams :: Game -> IO [(String, Int)]
-updateTeams g = do
-  let teamList = teams g
-  let n = currentTeam g
-  let currentT = teamList !! n
-  let updatedTeam = (fst currentT, (snd currentT) + 1)
-  let updatedTeams = (take n teamList)
-                  ++ [updatedTeam]
-                  ++ (drop (n+1) teamList)
-  return updatedTeams
+updateTeams :: Game -> [(String, Int)]
+updateTeams g = (take n teamList) ++ [updatedTeam] ++ (drop (n+1) teamList)
+  where
+    teamList = teams g
+    updatedTeam = (fst currentT, (snd currentT) + 1)
+    currentT = teamList !! n
+    n = currentTeam g
 
 countdown :: GameSettings -> IO ()
 countdown mGame = do
@@ -162,7 +157,7 @@ countdown mGame = do
         putStr "Time's up! "
         return ()
       else do
-        display mGame
+        displaySyntagma mGame
         g <- takeMVar mGame
         let newTime = (time g) - 1
         let updatedGame = g { time = newTime }

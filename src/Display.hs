@@ -2,24 +2,19 @@ module Display where
 
 import Model
 
-import Control.Concurrent
-import Control.Monad
-import Data.Char
-import qualified Data.Text as T
-import System.Console.ANSI
-import System.Random.Shuffle
+import Control.Concurrent (readMVar)
+import System.Console.ANSI (clearScreen)
 
 
-display :: GameSettings -> IO ()
-display mGame = do
+displaySyntagma :: GameSettings -> IO ()
+displaySyntagma mGame = do
   clearScreen
   g <- readMVar mGame
   if null (syntagmas g)
     then putStrLn ""
     else do
       putStrLn "press ENTER when guessed\n"
-      print $ time g
-      putStrLn ""
+      putStrLn $ show (time g) ++ "\n"
       putStrLn $ head $ syntagmas g
 
 
@@ -40,19 +35,22 @@ displaySyntagmaInput syns = do
 
 
 displayRoundDescription :: Int -> IO ()
-displayRoundDescription 1 = putStrLn
-  "In the first round your goal is to describe the syntagma verbally.\n\
-  \You can use all words except for roots and foreign languages. \n\
-  \For a higher difficulty you can avoid using gesticulations.\n"
-displayRoundDescription 2 = putStrLn
-  "In the second round your goal is to describe the syntagma using only gesticulations.\n\
-  \Like you're playing charades.\n\
-  \For a higher difficulty you can avoid producing sounds or pointing to things in your vicinity.\n"
-displayRoundDescription 3 = putStrLn
-  "In the second round your goal is to describe the syntagma using only ONE word.\n\
-  \Even though there are two words in a syntagma, use only one word to describe them both.\n\
-  \For a higher difficulty you can avoid eye contact and reacting to your teammates guesses.\n"
-displayRoundDescription _ = putStrLn "Rounds above 3 are not yet described"
+displayRoundDescription r = do
+  putStrLn $ "Round " ++ show r ++ " Start!\n"
+  case r of
+    1 -> putStrLn
+      "In the first round your goal is to describe the syntagma verbally.\n\
+      \You can use all words except for roots and foreign languages. \n\
+      \For a higher difficulty you can avoid using gesticulations.\n"
+    2 -> putStrLn
+      "In the second round your goal is to describe the syntagma using only gesticulations.\n\
+      \Like you're playing charades.\n\
+      \For a higher difficulty you can avoid producing sounds or pointing to things in your vicinity.\n"
+    3 -> putStrLn
+      "In the second round your goal is to describe the syntagma using only ONE word.\n\
+      \Even though there are two words in a syntagma, use only one word to describe them both.\n\
+      \For a higher difficulty you can avoid eye contact and reacting to your teammates guesses.\n"
+    _ -> putStrLn "Rounds above 3 are not yet described"
 
 
 displayScores :: Game -> IO ()
